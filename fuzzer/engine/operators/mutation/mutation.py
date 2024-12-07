@@ -8,12 +8,16 @@ import random
 from utils import settings
 from ...plugin_interfaces.operators.mutation import Mutation
 
+"""
+    Lớp Mutation kế thừa từ lớp Mutation trong module plugin_interfaces.operators.mutation
+    Lớp này thực hiện việc đột biến cá thể bằng cách thay đổi các gene trong chromosome của cá thể.
+"""
 
 class Mutation(Mutation):
     def __init__(self, pm):
         '''
-        :param pm: The probability of mutation (usually between 0.001 ~ 0.1)
-        :type pm: float in (0.0, 1.0]
+        Nhận tham số pm (xác suất đột biến) khi khởi tạo một đối tượng Mutation.
+        Nếu pm không nằm trong khoảng (0.0, 1.0], chương trình sẽ ném ra lỗi ValueError
         '''
         if pm <= 0.0 or pm > 1.0:
             raise ValueError('Invalid mutation probability')
@@ -21,10 +25,17 @@ class Mutation(Mutation):
         self.pm = pm
 
     def mutate(self, individual, engine):
+        """
+        Nhận hai tham số: individual (đại diện cho một cá thể) và engine (động cơ hoặc môi trường thực thi)
+        """
         for gene in individual.chromosome:
-            # TRANSACTION
+            # Xét từng gene trong individual.chromosome, sau đó thực hiện thay đổi (đột biến) các trường của gene
             function_hash = gene["arguments"][0]
-            for element in gene:
+            for element in gene:    
+                """
+                Nếu gene trong indivial.chromosome là account, amount, gaslimit: Giá trị thay đổi ngẫu nhiên theo các hàm tương ứng 
+                từ individual.generator nếu vượt qua ngưỡng random.random() <= self.pm
+                """
                 if element == "account" and random.random() <= self.pm:
                     gene["account"] = individual.generator.get_random_account(function_hash)
                 elif element == "amount" and random.random() <= self.pm:
@@ -32,6 +43,12 @@ class Mutation(Mutation):
                 elif element == "gaslimit" and random.random() <= self.pm:
                     gene["gaslimit"] = individual.generator.get_random_gaslimit(function_hash)
                 else:
+                    """
+                    Nếu gene trong indivial.chromosome là arguments,đồng thời gene có chứa hàm băm (function_hash) trong danh sách interface
+                    của generator, thì thực hiện thay đổi ngẫu nhiên các giá trị của arguments trong gene
+                    Trong trường hợp phần tử là "arguments" mà xác suất ngẫu nhiên lớn hơn pm, nó sẽ tiếp tục vòng lặp mà không thay đổi giá trị xác suất 
+                    ngẫu nhiên lớn hơn pm, nó sẽ tiếp tục vòng lặp mà không thay đổi giá trị
+                    """
                     for argument_index in range(1, len(gene["arguments"])):
                         if random.random() > self.pm:  # 变异概率
                             continue
@@ -50,6 +67,10 @@ class Mutation(Mutation):
                                                                        argument_index - 1)
                                     gene["arguments"][argument_index] = argument
 
+            
+            """
+            Đoạn mã này cập nhật các thuộc tính liên quan đến trạng thái khối (block state) và trạng thái toàn cục (global state) của gene
+            Những thông tin này thường được sử dụng trong môi trường như blockchain để mô phỏng trạng thái thực tế của hệ thống"""
             # BLOCK
             if "timestamp" in gene:
                 if random.random() <= self.pm:

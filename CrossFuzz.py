@@ -76,6 +76,25 @@ def test_run():
 
 
 def cli():
+    # Hiển thị hướng dẫn sử dụng khi không có đủ tham số hoặc gọi `-help`
+    if len(sys.argv) < 10 or sys.argv[1] in ("-help", "--help"):
+        print(
+            f"Usage: python {sys.argv[0]} <file_path> <contract_name> <solc_version> <max_trans_length> "
+            "<fuzz_time> <res_saved_path> <solc_path> <constructor_params_path> <trans_duplication>\n\n"
+            "Arguments:\n"
+            "  file_path             Path to the Solidity file to be fuzzed\n"
+            "  contract_name         Name of the contract to be fuzzed\n"
+            "  solc_version          Supported Solidity compiler version (0.4.24, 0.4.26, 0.6.12, 0.8.4)\n"
+            "  max_trans_length      Maximum transaction length (e.g., 10)\n"
+            "  fuzz_time             Fuzzing duration in seconds (e.g., 60)\n"
+            "  res_saved_path        Path to save the result JSON (e.g., ./result.json)\n"
+            "  solc_path             Path to the Solidity compiler (solc)\n"
+            "  constructor_params_path Path to constructor parameters (e.g., 'auto' or './examples/p.json')\n"
+            "  trans_duplication     Duplicate transactions: 0 (no), 1 (yes)\n"
+        )
+        sys.exit(1)  # Kết thúc chương trình khi hiển thị hướng dẫn
+
+    # Gán các tham số
     p = sys.argv[1]  # sol file path, which is the file path to be fuzzed
     c_name = sys.argv[2]  # contract name, which is the contract to be fuzzed
     solc_version = sys.argv[3]  # only support 0.4.24, 0.4.26, 0.6.12, 0.8.4
@@ -109,5 +128,5 @@ def cli():
 if __name__ == "__main__":
     PYTHON = "python3"  # your python3 path
     FUZZER = "fuzzer/main.py"  # your fuzzer path in this repo
-    # cli()
-    test_run()
+    cli()
+    # test_run()

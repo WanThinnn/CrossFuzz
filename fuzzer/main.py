@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+
 # -*- coding: utf-8 -*-
 
 import os
@@ -29,6 +31,46 @@ from engine.operators import Mutation
 from engine.fitness import fitness_function
 from fuzzer.utils.transaction_seq_utils import check_cross_init, gen_trans, init_func
 
+"""
+main.py là chính chương trình chính của trình tạo dữ liệu fuzzing cho các hợp đồng thông minh trên Ethereum.
+Nó bao gồm các chức năng để khởi tạo môi trường fuzzing, triển khai các hợp đồng phụ thuộc, và chạy quá trình fuzzing
+sử dụng các thuật toán di truyền như chọn lọc, lai ghép và đột biến.
+
+
+    Lớp Fuzzer chịu trách nhiệm quản lý toàn bộ quá trình fuzzing của một hợp đồng thông minh. 
+    Nó bao gồm việc triển khai các hợp đồng phụ thuộc, khởi tạo môi trường fuzzing, và chạy công cụ fuzzing.
+    
+
+        
+        Khởi tạo một đối tượng Fuzzer với các tham số cần thiết như tên hợp đồng, ABI, mã bytecode triển khai và runtime,
+        trạng thái blockchain, trình giải thích Z3, các đối số cấu hình, và hạt giống ngẫu nhiên.
+        
+
+        
+        Triển khai các hợp đồng phụ thuộc được chỉ định trong các đối số cấu hình.
+        Nếu triển khai thành công, các hợp đồng này sẽ được thêm vào danh sách tài khoản và môi trường fuzzing sẽ được cập nhật.
+        
+
+        
+        Chạy quá trình fuzzing chính bằng cách tạo các tài khoản giả, triển khai các hợp đồng phụ thuộc nếu cần,
+        khởi tạo quần thể ban đầu, áp dụng các toán tử di truyền, và thực hiện fuzzing trong một số thế hệ đã định.
+        
+
+    
+    Hàm chính để thực thi chương trình fuzzing. Nó phân tích các đối số dòng lệnh, thiết lập môi trường fuzzing,
+    biên dịch mã nguồn nếu cần thiết, và khởi chạy quá trình fuzzing bằng cách tạo một đối tượng Fuzzer và gọi phương thức run().
+    
+
+    
+    Hàm này xử lý việc phân tích các đối số dòng lệnh được cung cấp bởi người dùng.
+    Nó xác định các tham số như tệp nguồn Solidity, ABI, tên hợp đồng, trạng thái blockchain, 
+    và các tham số cấu hình cho quá trình fuzzing như số thế hệ, kích thước quần thể, xác suất lai ghép và đột biến.
+    Hàm này cũng thực hiện các kiểm tra hợp lệ trên các đối số đã nhập và thiết lập các cài đặt cấu hình tương ứng.
+"""
+
+
+
+
 # 获取根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 将根目录添加到path中
@@ -41,6 +83,30 @@ from utils.control_flow_graph import ControlFlowGraph
 
 
 class Fuzzer:
+    """
+    Mô tả lớp Fuzzer:
+    Lớp `Fuzzer` chịu trách nhiệm thực hiện quá trình fuzzing cho hợp đồng thông minh. Các chức năng chính bao gồm:
+    Attributes:
+        contract_name (str): Tên của hợp đồng cần fuzzing.
+        abi (dict): ABI của hợp đồng.
+        deployment_bytecode (str): Bytecode triển khai của hợp đồng.
+        runtime_bytecode (str): Bytecode thời gian chạy của hợp đồng.
+        test_instrumented_evm: EVM được trang bị để kiểm thử.
+        blockchain_state: Trạng thái hiện tại của blockchain.
+        solver: Trình giải để giải quyết các điều kiện trong quá trình fuzzing.
+        args: Các đối số cấu hình cho quá trình fuzzing.
+        seed (int): Hạt giống để khởi tạo quá trình fuzzing.
+        source_map (dict, optional): Bản đồ nguồn cho hợp đồng.
+        whole_compile_info (dict, optional): Thông tin biên dịch đầy đủ của hợp đồng.
+    Methods:
+        __init__(...): Khởi tạo các thuộc tính cần thiết cho quá trình fuzzing và thiết lập môi trường fuzzing.
+        deploy_depend_contracts(): Triển khai các hợp đồng phụ thuộc trước khi bắt đầu fuzzing.
+        run(): Thực thi quá trình fuzzing, bao gồm triển khai hợp đồng chính, tạo quần thể ban đầu, áp dụng các toán tử di truyền và chạy engine fuzzing.
+    Ví dụ sử dụng:
+        fuzzer = Fuzzer(contract_name, abi, deployment_bytecode, runtime_bytecode, ...)
+        fuzzer.run()
+    """
+    
     def __init__(self, contract_name, abi, deployment_bytecode, runtime_bytecode, test_instrumented_evm,
                  blockchain_state, solver, args, seed, source_map=None, whole_compile_info=None):
         global logger
@@ -257,6 +323,21 @@ class Fuzzer:
 
 
 def main():
+    """
+    Hàm chính của chương trình.
+    Hàm `main()` thực hiện các bước sau:
+    - Phân tích các đối số khởi chạy.
+    - Khởi tạo logger để ghi nhận thông tin hoạt động.
+    - Kiểm tra và xử lý tệp kết quả nếu tồn tại.
+    - Thiết lập seed ngẫu nhiên dựa trên đối số hoặc giá trị ngẫu nhiên.
+    - Khởi tạo và cấu hình môi trường ảo Ethereum (EVM).
+    - Tạo và cấu hình solver Z3 để sử dụng trong quá trình phân tích.
+    - Xử lý trạng thái blockchain nếu được cung cấp.
+    - Biên dịch mã nguồn Solidity để lấy bytecode và ABI nếu được cung cấp.
+    - Khởi chạy quá trình fuzzing trên hợp đồng thông minh hoặc ABI đã cho.
+    Hàm không trả về giá trị nào và sẽ kết thúc chương trình nếu phát hiện lỗi nghiêm trọng.
+    """
+    
     args = launch_argument_parser()
 
     logger = initialize_logger("Main    ")
@@ -265,7 +346,8 @@ def main():
     if args.results and os.path.exists(args.results):
         os.remove(args.results)
         logger.info("Contract " + str(args.source) + " has already been analyzed: " + str(args.results))
-        logger.info(f"原始的测试输出文件{args.results}已被删除")
+        # logger.info(f"原始的测试输出文件{args.results}已被删除")
+        logger.info(f"The original test output file {args.results} has been deleted")
 
     # Initializing random
     if args.seed:
@@ -504,12 +586,13 @@ def launch_argument_parser():
             sys.exit(-1)
     if args.trans_json_path is not None:
         settings.TRANS_INFO_JSON_PATH = args.trans_json_path
-        print(f'\033[42;31m!!!!!!设置用于存储事务序列信息的json地址{settings.TRANS_INFO_JSON_PATH}!!!!!!\033[0m')
+        # print(f'\033[42;31m!!!!!!设置用于存储事务序列信息的json地址{settings.TRANS_INFO_JSON_PATH}!!!!!!\033[0m')
+        print(f'\033[42;31m!!!!!! The JSON path for storing transaction sequence information is {settings.TRANS_INFO_JSON_PATH}!!!!!!\033[0m')
         if os.path.exists(settings.TRANS_INFO_JSON_PATH):
-            print(
-                f'\033[42;31m!!!!!!用于存储事务序列信息的json地址{settings.TRANS_INFO_JSON_PATH}已经存在了, 现已覆盖!!!!!!\033[0m')
+            # print(f'\033[42;31m!!!!!!用于存储事务序列信息的json地址{settings.TRANS_INFO_JSON_PATH}已经存在了, 现已覆盖!!!!!!\033[0m')
+            print(f'\033[42;31m!!!!!! The JSON path for storing transaction sequence information {settings.TRANS_INFO_JSON_PATH} already exists and has been overwritten!!!!!!\033[0m')
     if args.trans_comp == 1:
-        settings.TRANS_COMP_OPEN = True  # 是否开启反馈机制
+        settings.TRANS_COMP_OPEN = True  
     elif args.trans_comp == 2:
         settings.TRANS_COMP_OPEN = False
     settings.MAIN_CONTRACT_NAME = args.contract

@@ -177,10 +177,13 @@ class Fuzzer:
                     contract_address = encode_hex(result.msg.storage_address)
                     self.instrumented_evm.accounts.append(contract_address)
                     self.env.nr_of_transactions += 1
+                    # logger.info(
+                    #     f"依赖合约 {depend_contract} deployed at\t%s, 由{self.instrumented_evm.accounts[0]}创建",
+                    #     contract_address)
                     logger.info(
-                        f"依赖合约 {depend_contract} deployed at\t%s, 由{self.instrumented_evm.accounts[0]}创建",
+                        f"Dependent contract {depend_contract} deployed at\t%s, created by {self.instrumented_evm.accounts[0]}",
                         contract_address)
-                    # 存储部署信息
+                    # 
                     settings.TRANS_INFO[depend_contract] = contract_address
                     settings.DEPLOYED_CONTRACT_ADDRESS[depend_contract] = contract_address
                     generator = Generator(interface=interface, bytecode=deployement_bytecode,

@@ -76,6 +76,16 @@ def test_run():
 
 
 def cli():
+    if len(sys.argv) < 2:
+        print("Usage: python3 CrossFuzz.py <option>")
+        print("Please enter: \n 'python3 CrossFuzz.py demo_test' for demo \n 'python3 CrossFuzz.py --help' for using CLI app.")
+        sys.exit(1)
+    option = sys.argv[1]
+    
+    if option.lower() == "demo_test":
+        test_run()
+        sys.exit(0)  # Kết thúc chương trình sau khi thực hiện test_run()
+
     # Hiển thị hướng dẫn sử dụng khi không có đủ tham số hoặc gọi `-help`
     if len(sys.argv) < 10 or sys.argv[1] in ("-help", "--help"):
         print(
@@ -93,7 +103,6 @@ def cli():
             "  trans_duplication     Duplicate transactions: 0 (no), 1 (yes)\n"
         )
         sys.exit(1)  # Kết thúc chương trình khi hiển thị hướng dẫn
-
     # Gán các tham số
     p = sys.argv[1]  # sol file path, which is the file path to be fuzzed
     c_name = sys.argv[2]  # contract name, which is the contract to be fuzzed
@@ -104,6 +113,7 @@ def cli():
     solc_path = sys.argv[7]  # solc path
     constructor_params_path = sys.argv[8]  # e.g., Auto or "examples/p.json"
     trans_duplication = sys.argv[9]  # e.g., 0 if you don't want to duplicate transactions, otherwise 1
+    print(f"Running fuzzing for contract {c_name} in file {p}...")
 
     _depend_contracts, _sl = analysis_depend_contract(file_path=p, _contract_name=c_name, _solc_version=solc_version,
                                                       _solc_path=solc_path)
@@ -126,7 +136,6 @@ def cli():
 
 
 if __name__ == "__main__":
-    PYTHON = "python3"  # your python3 path
-    FUZZER = "fuzzer/main.py"  # your fuzzer path in this repo
+    PYTHON = "python3"  # đường dẫn tới python3 của bạn
+    FUZZER = "fuzzer/main.py"  # đường dẫn đến fuzzer của bạn trong repo
     cli()
-    # test_run()

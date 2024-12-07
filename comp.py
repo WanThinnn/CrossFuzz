@@ -144,15 +144,17 @@ def analysis_main_contract_constructor(file_path: str, _contract_name: str, sl: 
                 for cst_param in res:
                     if isinstance(cst_param[2], list) and param_name in cst_param[2]:
                         cst_param[3].append(param_map_contract_name)
-    # 转换res
+    # Transform res
     ret = []
     for p_name, p_type, _, p_value in res:
         if p_type == "address" and len(p_value) == 0:
             p_value = ["YA_DO_NOT_KNOW"]
         p_value = list(set(p_value))
-        assert len(p_value) == 1, "理论上, 每个参数只能有一个预期值"
+        # assert len(p_value) == 1, "理论上, 每个参数只能有一个预期值"
+        assert len(p_value) == 1, "In theory, each parameter can only have one expected value"
         ret.append(f"{p_name} {p_type} {p_value[0]}")
-    logger.debug("构造函数参数为: " + str(ret))
+    # logger.debug("构造函数参数为: " + str(ret))
+    logger.debug("Constructor parameters: " + str(ret)) # Constructor parameters
     return ret
 
 

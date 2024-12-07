@@ -38,9 +38,9 @@ class DataDependencyLinearRankingSelection(Selection):
         NP = len(sorted_indvs)  # Số lượng cá thể trong quần thể
 
         # Tính toán xác suất chọn lọc cho từng cá thể dựa trên thứ hạng của chúng
-        # NOTE: Here the rank i belongs to {1, ..., N}
+        # NOTE: Sắp xếp theo 1 - > n tương đương từ min -> max
         p = lambda i: (self.pmin + (self.pmax - self.pmin) * (i - 1) / (NP - 1))
-        probabilities = [self.pmin] + [p(i) for i in range(2, NP)] + [self.pmax] # danh sách xác suất chọn lọc cho từng cá thể từ thấp dến cao
+        probabilities = [self.pmin] + [p(i) for i in range(2, NP)] + [self.pmax] # Tính toán xác suất chọn lọc cho từng cá thể dựa trên thứ hạng của chúng
 
         # Chuẩn hóa xác suất chọn lọc
         psum = sum(probabilities) # Tổng xác suất chọn lọc

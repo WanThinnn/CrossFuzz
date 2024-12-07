@@ -8,6 +8,25 @@ from utils.utils import convert_stack_value_to_int
 class UncheckedReturnValueDetector():
     '''
     Phát hiện giá trị trả về không được kiểm tra.
+
+    Thuộc tính:
+    - swc_id (int): Mã định danh của SWC (Smart Contract Weakness Classification).
+    - severity (str): Mức độ nghiêm trọng của lỗi.
+    - exceptions (dict): Từ điển lưu trữ các ngoại lệ chưa được xử lý.
+    - external_function_calls (dict): Từ điển lưu trữ các cuộc gọi hàm bên ngoài chưa được kiểm tra giá trị trả về.
+    Phương thức:
+    - __init__(): Khởi tạo đối tượng và gọi phương thức init().
+    - init(): Khởi tạo các thuộc tính của đối tượng.
+    - detect_unchecked_return_value(previous_instruction, current_instruction, tainted_record, transaction_index): 
+        Phát hiện các giá trị trả về không được kiểm tra trong các lệnh của hợp đồng thông minh.
+        Tham số:
+        - previous_instruction (dict): Lệnh trước đó.
+        - current_instruction (dict): Lệnh hiện tại.
+        - tainted_record (object): Bản ghi bị nhiễm bẩn.
+        - transaction_index (int): Chỉ số giao dịch.
+        Trả về:
+        - tuple: Một tuple chứa thông tin về ngoại lệ hoặc cuộc gọi hàm bên ngoài chưa được kiểm tra giá trị trả về, nếu có.
+
     '''
     def __init__(self):
         self.init()
@@ -19,6 +38,18 @@ class UncheckedReturnValueDetector():
         self.external_function_calls = {}
 
     def detect_unchecked_return_value(self, previous_instruction, current_instruction, tainted_record, transaction_index):
+        '''
+        Phát hiện các giá trị trả về không được kiểm tra trong các lệnh của hợp đồng thông minh.
+        
+        Tham số:
+        - previous_instruction (dict): Lệnh trước đó.
+        - current_instruction (dict): Lệnh hiện tại.
+        - tainted_record (object): Bản ghi bị nhiễm bẩn.
+        - transaction_index (int): Chỉ số giao dịch.
+        
+        Trả về:
+        - tuple: Một tuple chứa thông tin về ngoại lệ hoặc cuộc gọi hàm bên ngoài chưa được kiểm tra giá trị trả về, nếu có.
+        '''
         # Register all exceptions
         if previous_instruction and previous_instruction["op"] in ["CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"] and convert_stack_value_to_int(current_instruction["stack"][-1]) == 1:
             if tainted_record and tainted_record.stack and tainted_record.stack[-1] and is_expr(tainted_record.stack[-1][0]):

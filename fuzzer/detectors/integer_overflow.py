@@ -36,6 +36,17 @@ class IntegerOverflowDetector():
         '''
         Phát hiện lỗi tràn số nguyên dựa trên các lệnh trước và sau trong quá trình thực thi.
         
+        Parameters:
+            - mfe (object): Đối tượng phân tích lỗi.
+            - tainted_record (object): Bản ghi bị nhiễm.
+            - previous_instruction (dict): Lệnh trước đó.
+            - current_instruction (dict): Lệnh hiện tại.
+            - individual (object): Đối tượng cá nhân trong quá trình tiến hóa.
+            - transaction_index (int): Chỉ số giao dịch hiện tại.
+        
+        Returns:
+            tuple: Trả về bộ giá trị (program counter, transaction index, lỗi) nếu phát hiện lỗi tràn số nguyên hoặc lỗi tràn số nguyên âm, 
+               ngược lại trả về (None, None, None).
         '''
         # Kiểm tra xem có lệnh trước đó không và có phải là lệnh NOT và lệnh ADD không.
         if previous_instruction and previous_instruction["op"] == "NOT" and current_instruction and current_instruction["op"] == "ADD":

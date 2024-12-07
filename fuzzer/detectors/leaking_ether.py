@@ -36,12 +36,14 @@ class LeakingEtherDetector():
         Phát hiện rò rỉ ether trong hợp đồng thông minh.
         Hàm này kiểm tra các lệnh hiện tại trong quá trình thực thi hợp đồng thông minh để phát hiện
         các trường hợp rò rỉ ether, tức là khi ether được chuyển đến các tài khoản không đáng tin cậy.
+        
         Tham số:
         - current_instruction (dict): Lệnh hiện tại đang được thực thi.
         - taint_record (TaintRecord): Bản ghi taint của các giá trị trong ngăn xếp.
         - individual (Individual): Cá nhân hiện tại đang được kiểm tra.
         - transaction_index (int): Chỉ số của giao dịch hiện tại.
         - previous_branch (Branch): Nhánh trước đó trong quá trình thực thi.
+        
         Trả về:
         - tuple: (pc, transaction_index) nếu phát hiện rò rỉ ether, ngược lại trả về (None, None).
         '''

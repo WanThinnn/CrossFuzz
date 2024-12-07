@@ -33,10 +33,12 @@ class ReentrancyDetector():
         Phát hiện lỗi reentrancy trong hợp đồng thông minh.
         Hàm này kiểm tra các lệnh trong hợp đồng thông minh để phát hiện lỗi reentrancy, 
         một loại lỗi bảo mật phổ biến trong các hợp đồng thông minh Ethereum.
+        
         Args:
             tainted_record (object): Bản ghi chứa thông tin về các giá trị bị ảnh hưởng.
             current_instruction (dict): Lệnh hiện tại đang được thực thi.
             transaction_index (int): Chỉ số của giao dịch hiện tại.
+        
         Returns:
             tuple: Trả về một tuple chứa địa chỉ chương trình (program counter) và chỉ số giao dịch 
                    nếu phát hiện lỗi reentrancy, ngược lại trả về (None, None).

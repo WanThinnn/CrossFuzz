@@ -33,11 +33,13 @@ class LockingEtherDetector():
         '''
         Phát hiện tình trạng khóa ether trong hợp đồng thông minh.
         Hàm này kiểm tra xem liệu một giao dịch có bị khóa ether hay không, tức là không thể gửi ether đi nhưng có thể nhận ether.
+        
         Tham số:
         - cfg: Cấu hình của hợp đồng thông minh.
         - current_instruction: Lệnh hiện tại đang được thực thi.
         - individual: Cá nhân đang thực hiện giao dịch.
         - transaction_index: Chỉ số của giao dịch hiện tại.
+        
         Trả về:
         - Một tuple chứa địa chỉ của lệnh hiện tại (program counter) và chỉ số của giao dịch nếu phát hiện tình trạng khóa ether.
         - (None, None) nếu không phát hiện tình trạng khóa ether.

@@ -18,11 +18,13 @@ class AssertionFailureDetector():
         Phương thức này kiểm tra xem lệnh hiện tại có phải là lỗi assert 
         (hoặc "ASSERTFAIL" hoặc "INVALID") hay không. Nếu có, nó sẽ trả về 
         chỉ số chương trình (pc) và chỉ số giao dịch.
+        
         Tham số:
             current_instruction (dict): Lệnh hiện tại đang được thực thi. 
             Nó nên chứa một khóa "op" chỉ ra thao tác và một khóa "pc" 
             chỉ ra chỉ số chương trình.
             transaction_index (int): Chỉ số của giao dịch hiện tại.
+        
         Trả về:
             tuple: Một bộ giá trị chứa chỉ số chương trình và chỉ số giao dịch 
             nếu phát hiện lỗi assert, nếu không thì (None, None).

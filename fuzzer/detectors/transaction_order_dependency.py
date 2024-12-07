@@ -8,6 +8,24 @@ from utils.utils import convert_stack_value_to_int
 class TransactionOrderDependencyDetector():
     '''
     Phát hiện phụ thuộc thứ tự giao dịch
+    Thuộc tính:
+        swc_id (int): ID của SWC (Smart Contract Weakness Classification)
+        severity (str): Mức độ nghiêm trọng của phụ thuộc
+        sstores (dict): Lưu trữ các giao dịch SSTORE
+        sloads (dict): Lưu trữ các giao dịch SLOAD
+    Phương thức:
+        __init__(): Khởi tạo đối tượng và gọi phương thức init
+        init(): Khởi tạo các thuộc tính của đối tượng
+        detect_transaction_order_dependency(current_instruction, tainted_record, individual, transaction_index):
+            Phát hiện phụ thuộc thứ tự giao dịch dựa trên các lệnh hiện tại và các bản ghi bị nhiễm
+            Tham số:
+                current_instruction (dict): Lệnh hiện tại
+                tainted_record (dict): Bản ghi bị nhiễm
+                individual (object): Đối tượng cá nhân chứa thông tin giao dịch
+                transaction_index (int): Chỉ số của giao dịch hiện tại
+            Trả về:
+                tuple: Chỉ số chương trình (pc) của lệnh phụ thuộc và chỉ số giao dịch, hoặc (None, None) nếu không tìm thấy phụ thuộc
+
     '''
     def __init__(self):
         self.init()
@@ -19,6 +37,18 @@ class TransactionOrderDependencyDetector():
         self.sloads = {}
 
     def detect_transaction_order_dependency(self, current_instruction, tainted_record, individual, transaction_index):
+        '''
+         detect_transaction_order_dependency(current_instruction, tainted_record, individual, transaction_index):
+            Phát hiện phụ thuộc thứ tự giao dịch dựa trên các lệnh hiện tại và các bản ghi bị nhiễm
+            Tham số:
+                current_instruction (dict): Lệnh hiện tại
+                tainted_record (dict): Bản ghi bị nhiễm
+                individual (object): Đối tượng cá nhân chứa thông tin giao dịch
+                transaction_index (int): Chỉ số của giao dịch hiện tại
+            Trả về:
+                tuple: Chỉ số chương trình (pc) của lệnh phụ thuộc và chỉ số giao dịch, hoặc (None, None) nếu không tìm thấy phụ thuộc
+        '''
+        
         if current_instruction["op"] == "SSTORE":
             if tainted_record and tainted_record.stack and tainted_record.stack[-2] and is_expr(tainted_record.stack[-2][0]):
                 index = convert_stack_value_to_int(current_instruction["stack"][-1])

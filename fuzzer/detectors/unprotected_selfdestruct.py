@@ -5,6 +5,9 @@ from z3 import is_expr
 from utils import settings
 
 class UnprotectedSelfdestructDetector():
+    '''
+    Phát hiện việc sử dụng selfdestruct không được bảo vệ.
+    '''
     def __init__(self):
         self.init()
 

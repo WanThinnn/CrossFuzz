@@ -5,6 +5,9 @@ from z3 import is_expr
 from utils import settings
 
 class UnsafeDelegatecallDetector():
+    '''
+    Phát hiện việc sử dụng delegatecall không an toàn.
+    '''
     def __init__(self):
         self.init()
 

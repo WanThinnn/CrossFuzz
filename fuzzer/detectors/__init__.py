@@ -16,9 +16,15 @@ from .unsafe_delegatecall import UnsafeDelegatecallDetector
 from .leaking_ether import LeakingEtherDetector
 from .locking_ether import LockingEtherDetector
 from .unprotected_selfdestruct import UnprotectedSelfdestructDetector
-
+'''
+File __init__.py này khởi tạo một gói Python bằng cách nhập các module cần thiết để phát hiện lỗ hổng trong hợp đồng thông minh. 
+Nó sẽ Nhập các hàm tiện ích từ module utils.utils và các module phát hiện lỗ hổng khác nhau từ thư mục detectors.
+Tóm lại, file này tập hợp và xuất các lớp detector để tiện cho việc sử dụng trong các phần khác của ứng dụng. 
+Khi ta nhập gói này, tất cả các detector trên sẽ sẵn sàng để sử dụng cho việc phân tích và phát hiện lỗ hổng trong hợp đồng thông minh.
+'''
 
 class DetectorExecutor:
+
     def __init__(self, source_map=None, function_signature_mapping={}):
         self.source_map = source_map
         self.function_signature_mapping = function_signature_mapping

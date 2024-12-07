@@ -6,6 +6,9 @@ from utils import settings
 from utils.utils import convert_stack_value_to_int, convert_stack_value_to_hex
 
 class LeakingEtherDetector():
+    '''
+    Phát hiện rò rỉ Ether.
+    '''
     def __init__(self):
         self.init()
 

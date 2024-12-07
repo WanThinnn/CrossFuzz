@@ -4,6 +4,9 @@
 from utils.utils import convert_stack_value_to_int
 
 class BlockDependencyDetector():
+    '''
+     Phát hiện phụ thuộc vào thông tin của khối (block).
+    '''
     def __init__(self):
         self.init()
 

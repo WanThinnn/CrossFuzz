@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 class AssertionFailureDetector():
+    '''
+    Phát hiện lỗi khi câu lệnh assert thất bại.
+    '''
     def __init__(self):
         self.init()
 

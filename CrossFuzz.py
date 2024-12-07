@@ -6,9 +6,34 @@ import os
 import config
 from comp import analysis_depend_contract, analysis_main_contract_constructor
 
+'''
+Chương trình bắt đầu bằng việc gọi hàm run() để thực hiện fuzzing trên hợp đồng thông minh với các tham số cấu hình cụ thể.
+Kết quả từ quá trình fuzzing được sao chép đến vị trí lưu trữ để phân tích sau này.
+Nếu tệp được chạy trực tiếp, nó sẽ thiết lập môi trường cần thiết bằng cách xác định đường dẫn Python và fuzzer.
+Hàm test_run() được gọi hai lần để thực hiện các phiên kiểm thử, có thể với mục đích khác nhau hoặc để xác nhận tính ổn định.
+Dòng gọi hàm cli() bị chú thích có thể cho thấy người phát triển đang thử nghiệm và chưa muốn sử dụng giao diện dòng lệnh tại thời điểm này.
+
+'''
+
+
 
 def run(_file_path: str, _main_contract, solc_version: str, evm_version: str, timeout: int, _depend_contracts: list,
         max_individual_length: int, _constructor_args: list, _solc_path: str, _duplication: str = '0'):
+    '''
+    Gọi hàm run và lưu kết quả vào biến res:
+    1. Mục đích: Chạy quá trình fuzzing trên hợp đồng thông minh bằng cách gọi hàm run với các tham số cần thiết.
+    2. Các tham số:
+        p: Đường dẫn tới tệp hợp đồng thông minh.
+        c_name: Tên của hợp đồng chính cần fuzzing.
+        solc_version: Phiên bản của trình biên dịch Solidity.
+        "byzantium": Phiên bản EVM được sử dụng.
+        fuzz_time: Thời gian chạy fuzzer.
+        _depend_contracts: Danh sách các hợp đồng phụ thuộc.
+         max_trans_length: Độ dài tối đa của chuỗi giao dịch.
+        _constructor_args: Tham số khởi tạo cho constructor của hợp đồng.
+        _solc_path: Đường dẫn tới trình biên dịch Solidity.
+        _duplication: Tham số tùy chọn về nhân đôi giao dịch.
+    '''
     depend_contracts_str = " ".join(_depend_contracts)
     constructor_str = " ".join(_constructor_args)
     cmd = (f"{PYTHON} {FUZZER}"

@@ -5,6 +5,9 @@ from z3 import BitVec
 from utils.utils import convert_stack_value_to_int, convert_stack_value_to_hex
 
 class IntegerOverflowDetector():
+    '''
+    Phát hiện lỗi tràn số nguyên.
+    '''
     def __init__(self):
         self.init()
 

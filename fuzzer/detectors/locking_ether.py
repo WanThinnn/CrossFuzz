@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 class LockingEtherDetector():
+    '''
+    Phát hiện khóa Ether không mong muốn.
+    '''
     def __init__(self):
         self.init()
 

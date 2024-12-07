@@ -6,6 +6,9 @@ from z3.z3util import get_vars
 from utils.utils import convert_stack_value_to_int
 
 class TransactionOrderDependencyDetector():
+    '''
+    Phát hiện phụ thuộc thứ tự giao dịch
+    '''
     def __init__(self):
         self.init()
 

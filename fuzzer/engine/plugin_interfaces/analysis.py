@@ -6,53 +6,41 @@ from .metaclasses import AnalysisMeta
 
 class OnTheFlyAnalysis(metaclass=AnalysisMeta):
     '''
-    Class for providing an interface to easily extend and customize the behavior
-    of the on-the-fly analysis functionality of gapy.
+    Cung cấp một giao diện (interface) để dễ dàng mở rộng và 
+    tùy chỉnh hành vi của phân tích trong thời gian thực (on-the-fly) khi thuật toán di truyền đang chạy
+
+    Dùng làm cơ sở (base class) cho các lớp phân tích tùy chỉnh khác, buộc người lập trình 
+    phải triển khai các phương thức cần thiết (setup, register_step, finalize)
     '''
     # Only used in master process?
-    master_only = False
+    master_only = False # True nếu chỉ chạy trên tiến trình chính (master process)
 
     # Analysis interval.
-    interval = 1
+    interval = 1 #tần suất phân tích (số thế hệ giữa các lần gọi register_step)
 
     def setup(self, ng, engine):
         '''
-        Function called right before the start of genetic algorithm main iteration
-        to allow for custom setup of the analysis object.
-
-        :param ng: The number of generation.
-        :type ng: int
-
-        :param engine: The current GAEngine where the analysis is running.
-        :type engine: GAEngine
+        Được gọi ngay trước khi thuật toán chính bắt đầu
+        Cho phép cấu hình đối tượng phân tích tùy theo số thế hệ (ng) và cấu trúc của GA Engine (engine)
+        Phải được ghi đè (override) trong lớp con
         '''
         raise NotImplementedError
 
     def register_step(self, g, population, engine):
         '''
-        Function called in each iteration step.
-
-        :param g: Current generation number.
-        :type g: int
-
-        :param population: The up to date population of the iteration.
-        :type population: Population
-
-        :param engine: The current GAEngine where the analysis is running.
-        :type engine: GAEngine
+        Được gọi trong mỗi bước lặp (generation) của thuật toán
+        Cho phép phân tích dữ liệu của quần thể hiện tại
+        Phải được ghi đè trong lớp con
         '''
         raise NotImplementedError
 
     def finalize(self, population, engine):
         '''
-        Called after the iteration to allow for custom finalization and
-        post-processing of the collected data.
+        Được gọi sau khi thuật toán hoàn tất
 
-        :param population: The up to date population of the iteration.
-        :type population: Population
+        Dùng để xử lý hậu kỳ, tổng hợp dữ liệu phân tích và/hoặc lưu kết quả
 
-        :param engine: The current GAEngine where the analysis is running.
-        :type engine: GAEngine
+        Phải được ghi đè trong lớp con.
         '''
-        raise NotImplementedError
+        raise NotImplementedError #Đảm bảo rằng bất kỳ lớp nào kế thừa từ OnTheFlyAnalysis cũng phải triển khai các phương thức này
 

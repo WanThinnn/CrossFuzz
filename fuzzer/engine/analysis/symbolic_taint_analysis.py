@@ -14,7 +14,15 @@ from utils.utils import convert_stack_value_to_hex, convert_stack_value_to_int, 
 BIT_VEC_VAL_ZERO = BitVecVal(0, 256)
 BIT_VEC_VAL_ONE = BitVecVal(1, 256)
 
-def print_stack(stack):
+
+'''
+Phân tích dòng chảy dữ liệu trong một chương trình (hoặc hợp đồng thông minh) để phát hiện 
+các hành vi không mong muốn, lỗi bảo mật, hoặc các điều kiện thú vị thông qua biểu diễn 
+dữ liệu biểu tượng.
+'''
+
+
+def print_stack(stack): # In ra stack
     string = "["
     for element in stack:
         if element != False:
@@ -24,19 +32,19 @@ def print_stack(stack):
     string += "]"
     print(string)
 
-def print_memory(memory):
+def print_memory(memory):  # In ra bộ nhớ
     sorted_memory = collections.OrderedDict(sorted(memory.items()))
     for address in sorted_memory:
         print(str(address) + ": " + str(sorted_memory[address]))
 
-def print_storage(storage):
+def print_storage(storage): # In ra kho lưu trữ
     for address in storage:
         print(str(address) + ": {")
         for index in storage[address].keys():
             print("\t" + str(index) + ": " + str(storage[address][index]))
         print("}")
 
-class TaintRecord:
+class TaintRecord: # Định nghĩa một "bản ghi dấu vết" (taint record), để lưu trạng thái của môi trường khi chạy chương trình
     def __init__(self, input={}, value=False, output=False, address=None):
         """ Builds a taint record """
         # Execution environment
@@ -48,7 +56,7 @@ class TaintRecord:
         self.stack = []
         self.memory = {}
 
-    def __str__(self):
+    def __str__(self): #
         return json.dumps(self.__dict__)
 
     def clone(self):
@@ -62,7 +70,7 @@ class TaintRecord:
         clone.memory  = self.memory
         return clone
 
-class SymbolicTaintAnalyzer:
+class SymbolicTaintAnalyzer: # Định nghĩa một bộ phân tích dấu vết biểu tượng
     visited_pcs = set()
 
     def __init__(self):
@@ -71,7 +79,7 @@ class SymbolicTaintAnalyzer:
         # World state
         self.storage = {}
 
-    def propagate_taint(self, instruction, address):
+    def propagate_taint(self, instruction, address): #  # Phát hiện và truyền dấu vết từ instruction trước qua instruction hiện tại
         if not instruction["error"]:
             if len(self.callstack) < instruction["depth"]:
                 self.callstack.append([])
@@ -93,7 +101,7 @@ class SymbolicTaintAnalyzer:
             if len(self.callstack) > instruction["depth"]:
                 self.callstack[instruction["depth"]] = []
 
-    def introduce_taint(self, taint, instruction):
+    def introduce_taint(self, taint, instruction): #  # Thêm dấu vết mới (taint) vào instruction hiện tại
         if not instruction["error"] and instruction["depth"] - 1 < len(self.callstack):
             records = self.callstack[instruction["depth"] - 1]
 
@@ -115,7 +123,7 @@ class SymbolicTaintAnalyzer:
                 records[-1].memory[convert_stack_value_to_int(instruction["stack"][-1])] = []
                 records[-1].memory[convert_stack_value_to_int(instruction["stack"][-1])].append(taint)
 
-    def check_taint(self, instruction, source=None):
+    def check_taint(self, instruction, source=None): # Kiểm tra dấu vết tại instruction hiện tại
         if not instruction["error"] and instruction["depth"] - 1 < len(self.callstack):
             records = self.callstack[instruction["depth"] - 1]
             if len(records) < 2:
@@ -150,24 +158,24 @@ class SymbolicTaintAnalyzer:
                     return records[-2]
             return None
 
-    def clear_callstack(self):
+    def clear_callstack(self): # Xóa toàn bộ call stack và các program counters (PCs) đã được phân tích.
         self.callstack = []
         SymbolicTaintAnalyzer.visited_pcs = set()
 
-    def clear_storage(self):
+    def clear_storage(self): # Xóa trạng thái storage để làm sạch môi trường phân tích.
         self.storage = {}
 
-    def set_tainted_record(self, record, depth=-1, index=-1):
+    def set_tainted_record(self, record, depth=-1, index=-1): # Cập nhật trạng thái TaintRecord tại vị trí được xác định bởi depth và index trong call stack.
         self.callstack[depth][index] = record
 
-    def get_tainted_record(self, depth=-1, index=-1):
+    def get_tainted_record(self, depth=-1, index=-1): # Truy xuất TaintRecord từ call stack tại vị trí được chỉ định
         try:
             return self.callstack[depth][index]
         except:
             return None
 
     @staticmethod
-    def execute_instruction(record, storage, instruction):
+    def execute_instruction(record, storage, instruction): # Thực thi một instruction và trả về một TaintRecord mới
         assert len(record.stack) == len(instruction["stack"])
 
         new_record = record.clone()
@@ -213,7 +221,7 @@ class SymbolicTaintAnalyzer:
 
     @staticmethod
     #@profile
-    def mutate_stack_symbolically(record, mutator, instruction):
+    def mutate_stack_symbolically(record, mutator, instruction): # Thực hiện phép biến đổi stack theo mutator và instruction
         if instruction["op"] in [
             # Arithmetic Operations
             "ADD", "MUL", "SUB", "DIV", "SDIV", "MOD", "SMOD", "ADDMOD", "MULMOD", "EXP", "SHL", "SHR", "SAR",
@@ -349,7 +357,7 @@ class SymbolicTaintAnalyzer:
             SymbolicTaintAnalyzer.mutate_stack(record, mutator)
 
     @staticmethod
-    def mutate_stack(record, mutator):
+    def mutate_stack(record, mutator): # Thực hiện phép biến đổi stack theo mutator
         taint = False
         for i in range(mutator[0]):
             values = record.stack.pop()
@@ -363,43 +371,43 @@ class SymbolicTaintAnalyzer:
             record.stack.append(taint)
 
     @staticmethod
-    def get_operand(record, instruction, index):
+    def get_operand(record, instruction, index): # Trả về giá trị của toán hạng tại index trong stack
         if record.stack[-1]:
             return simplify(record.stack[-index][0])
         return BitVecVal(convert_stack_value_to_int(instruction["stack"][-index]), 256)
 
     @staticmethod
-    def mutate_push(record):
+    def mutate_push(record): # Thêm một giá trị vào stack
         SymbolicTaintAnalyzer.mutate_stack(record, (0, 1))
 
     @staticmethod
-    def mutate_dup(record, op):
+    def mutate_dup(record, op): # Nhân bản giá trị tại index trong stack
         depth = int(op[3:])
         index = len(record.stack) - depth
         record.stack.append(record.stack[index])
 
     @staticmethod
-    def mutate_swap(record, op):
+    def mutate_swap(record, op): # Hoán đổi giá trị tại index trong stack với giá trị cuối cùng trong stack
         depth = int(op[4:])
         l = len(record.stack) - 1
         i = l - depth
         record.stack[l], record.stack[i] = record.stack[i], record.stack[l]
 
     @staticmethod
-    def mutate_mload(record, instruction):
+    def mutate_mload(record, instruction): # Đọc giá trị từ memory
         record.stack.pop()
         index = convert_stack_value_to_int(instruction["stack"][-1])
         record.stack.append(SymbolicTaintAnalyzer.extract_taint_from_memory(record.memory, index, 32))
 
     @staticmethod
-    def mutate_mstore(record, instruction):
+    def mutate_mstore(record, instruction): # Ghi giá trị vào memory
         record.stack.pop()
         index, value = convert_stack_value_to_int(instruction["stack"][-1]), record.stack.pop()
         record.memory[index] = value
         record.memory = collections.OrderedDict(sorted(record.memory.items()))
 
     @staticmethod
-    def mutate_sload(record, storage, instruction):
+    def mutate_sload(record, storage, instruction): # Đọc giá trị từ storage
         record.stack.pop()
         taint = False
         index = convert_stack_value_to_hex(instruction["stack"][-1])
@@ -412,7 +420,7 @@ class SymbolicTaintAnalyzer:
         record.stack.append(taint)
 
     @staticmethod
-    def mutate_sstore(record, storage, instruction):
+    def mutate_sstore(record, storage, instruction): # Ghi giá trị vào storage
         record.stack.pop()
         index, value = convert_stack_value_to_hex(instruction["stack"][-1]), record.stack.pop()
         if not record.address in storage:
@@ -420,13 +428,13 @@ class SymbolicTaintAnalyzer:
         storage[record.address][index] = value
 
     @staticmethod
-    def mutate_log(record, op):
+    def mutate_log(record, op): # Ghi log
         depth = int(op[3:])
         for _ in range(depth + 2):
             record.stack.pop()
 
     @staticmethod
-    def mutate_sha3(record, instruction):
+    def mutate_sha3(record, instruction): # Tính toán hash của dữ liệu từ bộ nhớ
         record.stack.pop()
         offset = convert_stack_value_to_int(instruction["stack"][-1])
         record.stack.pop()
@@ -435,7 +443,7 @@ class SymbolicTaintAnalyzer:
         record.stack.append(value)
 
     @staticmethod
-    def mutate_call_data_load(record, instruction):
+    def mutate_call_data_load(record, instruction): # Truy cập và đọc dữ liệu từ callData (input khi gọi hợp đồng).
         value = record.stack.pop()
         if record.input:
             index = convert_stack_value_to_hex(instruction["stack"][-1])
@@ -447,11 +455,11 @@ class SymbolicTaintAnalyzer:
         record.stack.append(value)
 
     @staticmethod
-    def mutate_call_value(record, instruction):
+    def mutate_call_value(record, instruction): # Truy cập và đọc giá trị của value khi gọi hợp đồng.
         record.stack.append(record.value)
 
     @staticmethod
-    def mutate_copy(record, op, instruction):
+    def mutate_copy(record, op, instruction): # Sao chép dữ liệu từ stack hoặc memory
         if op == "EXTCODECOPY":
             record.stack.pop()
             index = convert_stack_value_to_int(instruction["stack"][-2])
@@ -464,14 +472,14 @@ class SymbolicTaintAnalyzer:
 
 
     @staticmethod
-    def mutate_create(record, instruction):
+    def mutate_create(record, instruction): # Tạo một hợp đồng mới
         record.stack.pop()
         record.stack.pop()
         record.stack.pop()
         record.stack.append(False)
 
     @staticmethod
-    def mutate_call(record, op, instruction):
+    def mutate_call(record, op, instruction): # Gọi một hợp đồng
         record.stack.pop()
         record.stack.pop()
         if op in ["CALL", "CALLCODE"]:
@@ -486,11 +494,11 @@ class SymbolicTaintAnalyzer:
         record.output = False
 
     @staticmethod
-    def mutate_return_data_size(record, op, instruction):
+    def mutate_return_data_size(record, op, instruction): # Lệnh này thêm giá trị output của bản ghi hiện tại vào ngăn xếp (stack).
         record.stack.append(record.output)
 
     @staticmethod
-    def extract_taint_from_memory(memory, offset, size):
+    def extract_taint_from_memory(memory, offset, size): # Truy xuất dấu vết từ bộ nhớ dựa trên vùng offset và size.
         taint = []
         keys = list(memory.keys())
         for j in range(len(keys)):
@@ -506,6 +514,7 @@ class SymbolicTaintAnalyzer:
         return taint
 
     memory_access = {
+        # Đây là bảng ánh xạ giữa các lệnh và thông tin về cách các lệnh này truy cập vào bộ nhớ.
         # instruction: (memory offset, memory size)
         'SHA3': (0, 1),
         'LOG0': (0, 1),
@@ -523,6 +532,7 @@ class SymbolicTaintAnalyzer:
     }
 
     stack_taint_table = {
+        # Đây là bảng ánh xạ giữa các lệnh và thông tin về cách các lệnh thao tác trên stack.
         # instruction: (taint source, taint target)
         # 0s: Stop and Arithmetic Operations
         'STOP': (0, 0),

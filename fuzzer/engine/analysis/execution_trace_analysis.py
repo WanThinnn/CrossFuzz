@@ -108,7 +108,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
             "cross_transactions": settings.CROSS_TRANS_EXEC_COUNT
         })
 
-        if len(self.env.code_coverage) == self.env.previous_code_coverage_length:  # 如果这一次覆盖率没有增加, 启动符号执行
+        if len(self.env.code_coverage) == self.env.previous_code_coverage_length:  # Nếu không có thay đổi trong độ phủ mã 
             self.symbolic_execution(population.indv_generator, population.other_generators)
             if self.symbolic_execution_count == settings.MAX_SYMBOLIC_EXECUTION:
                 del population.individuals[:]
@@ -150,7 +150,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                 continue
 
             try:
-                result = env.instrumented_evm.deploy_transaction(test)  # 执行事务
+                result = env.instrumented_evm.deploy_transaction(test)  # Thực thi giao dịch
             except ValidationError as e:
                 self.logger.error("Validation error in %s : %s (ignoring for now)", indv.hash, e)
                 continue
@@ -565,8 +565,8 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
             if check == sat:
                 model = self.env.solver.model()
 
-                self.logger.debug("(%s) Symbolic Solution to branch %s: %s ", _d["indv_hash"], pc,
-                                  "; ".join([str(x) + " (" + str(model[x]) + ")" for x in model]))
+                self.logger.debug("(%s) Symbolic Solution to branch %s: %s ", _d["indv_hash"], pc, 
+                                  "; ".join([str(x) + " (" + str(model[x]) + ")" for x in model]))  
 
                 for variable in model:
                     if str(variable).startswith("underflow"):

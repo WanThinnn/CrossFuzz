@@ -23,8 +23,21 @@ from fuzzer.utils import settings
 import json
 
 
+'''
+Đây là một script Python dùng để thực hiện phân tích và kiểm thử hợp đồng thông minh, cụ thể là
+thông qua việc thực hiện symbolic execution và phân tích các điều kiện logic trong hợp đồng. 
+Chương trình có thể nhận đầu vào là mã nguồn hợp đồng thông minh, sau đó tiến hành kiểm tra 
+các điều kiện tiềm ẩn và các lỗi bảo mật có thể xảy ra trong quá trình thực thi hợp đồng.
+'''
+
+
+
 class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
-    def __init__(self, fuzzing_environment: FuzzingEnvironment) -> None:
+    def __init__(self, fuzzing_environment: FuzzingEnvironment): #Hàm khởi tạo lớp Execution Trace Analyzer 
+        '''
+        Khởi tạo logger cho phân tích.
+        Thiết lập môi trường fuzzing để theo dõi và ghi lại các kết quả.
+        '''
         self.logger = initialize_logger("Analysis")
         self.env = fuzzing_environment
         self.symbolic_execution_count = 0
@@ -32,7 +45,12 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
     def setup(self, ng, engine):
         pass
 
-    def execute(self, population, engine):
+    def execute(self, population, engine): #Hàm thực thi phân tích
+        '''
+        Xóa dữ liệu bộ nhớ cũ.
+        Hàm thực thi phân tích, thực hiện thực thi từng cá thể trong quần thể 
+        Cập nhật các thống kê sau khi thực hiện kiểm thử.
+        '''
         self.env.memoized_fitness.clear()
         self.env.memoized_storage.clear()
         self.env.memoized_symbolic_execution.clear()
@@ -50,7 +68,11 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
         # Update statistic variables.
         engine._update_statvars()
 
-    def register_step(self, g, population, engine):
+    def register_step(self, g, population, engine): #Hàm đăng ký bước thực thi
+        '''
+        Hàm này được gọi mỗi bước trong quá trình fuzzing để thực hiện 
+        kiểm thử và ghi lại các thống kê, bao gồm tỷ lệ phủ mã và phủ nhánh.
+        '''
         self.execute(population, engine)
 
         code_coverage_percentage = 0
@@ -103,7 +125,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
     def execution_function(self, indv, env: FuzzingEnvironment):
         env.unique_individuals.add(indv.hash)
 
-        # Initialize metric
+        # Initialize metric (Thiết lập các chỉ số đánh giá)
         branches = {}
         indv.data_dependencies = []
         contract_address = None
@@ -156,7 +178,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
             for i, instruction in enumerate(result.trace):
                 if settings.MAIN_CONTRACT_NAME != "" and settings.TRANS_INFO[settings.MAIN_CONTRACT_NAME] != \
                         test["transaction"]["to"]:
-                    # 对于跨合约的情况, 暂时不统计其他合约
+                    #Đối với các tình huống liên quan đến hợp đồng chéo, tạm thời không thống kê các hợp đồng khác
                     continue
 
                 env.symbolic_taint_analyzer.propagate_taint(instruction, contract_address)
@@ -166,20 +188,25 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                                                     previous_branch,
                                                     transaction_index)
 
-                # If constructor, we don't have to take into account the constructor inputs because they will be part of the
-                # state. We don't have to compute the code coverage, because the code is not the deployed one. We don't need
-                # to compute the cfg because we are on a different code. We actually don't need analyzing its traces.
+                #trong trường hợp xử lý constructor (hàm khởi tạo), không cần phải quan tâm đến 
+                # các chi tiết cụ thể như đầu vào của constructor, độ phủ mã, hoặc các dấu vết thực thi, 
+                # vì chúng không liên quan trực tiếp đến mã đã triển khai hoặc mã đang phân tích.
                 if indv.chromosome[transaction_index]["arguments"][0] == "constructor":
                     continue
 
-                # Code coverage, 判断是否trace属于主合约, 如果不属于, 那么不添加到code_coverage里
 
+                # Độ phủ mã (code coverage), xác định xem trace có thuộc về hợp đồng chính hay không. 
+                # Nếu không thuộc về hợp đồng chính, thì không thêm vào code_coverage. 
+                
                 env.code_coverage.add(hex(instruction["pc"]))
 
                 # Dynamically build control flow graph
                 if env.cfg:
                     env.cfg.execute(instruction["pc"], instruction["stack"], instruction["op"], env.visited_branches,
                                     env.results["errors"].keys())
+                # thực thi lệnh và cập nhật thông tin trong đồ thị luồng điều khiển (CFG). Cụ thể, nó ghi nhận 
+                # các chỉ số chương trình (PC), các giá trị trong ngăn xếp và các nhánh đã đi qua.    
+                    
 
                 if previous_instruction and previous_instruction["op"] == "SHA3":
                     sha3[instruction["stack"][-1][1]] = instruction["memory"]
@@ -201,11 +228,11 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                     jumpi_condition = convert_stack_value_to_int(instruction["stack"][-2])
 
                     if jumpi_condition == 0:
-                        # don't jump, but increase pc
+                        # Không nhảy, nhưng tăng chỉ số chương trình (PC)
                         branches[jumpi_pc][hex(destination)] = False
                         branches[jumpi_pc][hex(instruction["pc"] + 1)] = True
                     else:
-                        # jump to destination
+                        # Nhảy đến địa chỉ chỉ định
                         branches[jumpi_pc][hex(destination)] = True
                         branches[jumpi_pc][hex(instruction["pc"] + 1)] = False
 
@@ -281,6 +308,9 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
 
                 # If something goes wrong, we need to clean some pools
                 elif instruction["op"] in ["REVERT", "INVALID", "ASSERTFAIL"]:
+                    # Nếu gặp phải lỗi trong quá trình thực thi như REVERT, INVALID hoặc ASSERTFAIL, 
+                    # hệ thống sẽ kiểm tra điều kiện lỗi và có thể kích hoạt cơ chế kiểm tra chéo
+                    # (cross-check) hoặc khôi phục các tham số.
                     if this_error_cross_check and settings.TRANS_COMP_OPEN and random.randint(0,
                                                                                               100) <= settings.P_OPEN_CROSS:
                         hash_4_chromosome = count_hash_4_chromosome(indv.chromosome)
@@ -288,7 +318,8 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                             settings.TRANS_MODE = "cross"  # 启动交叉模式
                             indv_success = (
                                 indv,
-                                transaction_index)  # 从0到transaction_index-1的事务都执行成功了, transaction_index是当前事务,这个执行失败了
+                                transaction_index)  
+                                # Tất cả các giao dịch từ 0 đến transaction_index-1 đã thực thi thành công, và giao dịch tại transaction_index đã thất bại
                             settings.TRANS_CROSS_BAD_INDVS.append(indv_success)
                             settings.TRANS_CROSS_BAD_INDVS_HASH.add(hash_4_chromosome)
                             this_error_cross_check = False
@@ -351,6 +382,9 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                                     _size = int(_var_split[3], 16)
                                     indv.generator.remove_returndatasize_from_pool(_function_hash, _address, _size)
 
+                
+                # Trong quá trình phân tích, các biến có thể bị nhiễm bẩn (tainted) khi có thao tác mà tác động đến chúng.
+                # Các biến này sẽ được ghi lại trong bảng tạm thời để theo dõi 
                 elif instruction["op"] == "BALANCE":
                     taint = BitVec("_".join(["balance", str(transaction_index)]), 256)
                     env.symbolic_taint_analyzer.introduce_taint(taint, instruction)
@@ -499,13 +533,13 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
         return code_coverage
 
     def symbolic_execution(self, indv_generator, other_generators):
-        if not self.env.args.constraint_solving:  # 是否启用符号执行模块
+        if not self.env.args.constraint_solving:  # Có bật chế độ thực thi ký hiệu (symbolic execution) không
             return
 
         for index, pc in enumerate(self.env.visited_branches):
             self.logger.debug("b(%d) pc : %s - visited branches : %s", index, pc, self.env.visited_branches[pc].keys())
 
-            if len(self.env.visited_branches[pc]) != 1:  # 如果这个分支, 已经有2条路径可以出发了, 那么跳过, 没必要为其生成了
+            if len(self.env.visited_branches[pc]) != 1:  # Nếu nhánh này đã có 2 đường đi có thể xuất phát, thì bỏ qua, không cần phải tạo thêm nhánh cho nó.
                 continue
 
             branch, _d = next(iter(self.env.visited_branches[pc].items()))
@@ -514,18 +548,19 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                 self.logger.debug("No expression for b(%d) pc : %s", index, pc)
                 continue
 
-            negated_branch = simplify(Not(_d["expression"][-1]))  # 反转最后一个条件
+            negated_branch = simplify(Not(_d["expression"][-1]))  # Lật ngược điều kiện cuối cùng
 
             if negated_branch in self.env.memoized_symbolic_execution:
                 continue
 
             self.env.solver.reset()
-            for expression_index in range(len(_d["expression"]) - 1):  # 除了最后一个条件, 其他的条件加入到约束求解器里
+            for expression_index in range(len(_d["expression"]) - 1):  # Thêm tất cả các điều kiện ngoại trừ điều kiện cuối cùng vào bộ giải quyết ràng buộc
                 expression = simplify(_d["expression"][expression_index])
                 self.env.solver.add(expression)
-            self.env.solver.add(negated_branch)  # 将反转条件加入到约束求解器里
+            self.env.solver.add(negated_branch)  # Thêm điều kiện đã bị đảo ngược vào bộ giải quyết ràng buộc
 
-            check = self.env.solver.check()  # 判断是否满足, 如果满足了, 说明反转条件在约束求解器里可以满足, 存在这么一个值, 让另一个分支成立, 但是! 不一定满足真实情况
+            check = self.env.solver.check()  # Kiểm tra xem có thỏa mãn không, nếu có nghĩa là điều kiện đảo ngược có thể thỏa mãn
+                                            # trong bộ giải quyết ràng buộc, tồn tại một giá trị cho phép nhánh kia thành công, nhưng! Không chắc chắn thỏa mãn trong thực tế
 
             if check == sat:
                 model = self.env.solver.model()
@@ -618,7 +653,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
                         parameter_index = int(var_split[2])
                         # TODO: THE SOLVER DOES NOT CONSIDER THE MAX SIZE OF THE VARIABLE
                         #   GENERATING LATER A eth_abi.exceptions.ValueOutOfBounds
-                        if "[" in indv_generator.interface[_function_hash][parameter_index]:  # 如果是数组?
+                        if "[" in indv_generator.interface[_function_hash][parameter_index]:  # kiểm tra kiểu dữ liệu xem có phải mảng không
                             if indv_generator.interface[_function_hash][parameter_index].startswith("int"):
                                 argument = model[variable].as_signed_long()
                             elif indv_generator.interface[_function_hash][parameter_index].startswith("address"):
@@ -738,7 +773,11 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
 
             self.env.memoized_symbolic_execution[negated_branch] = True
 
-    def finalize(self, population, engine):
+    def finalize(self, population, engine): # Hàm này được gọi khi kết thúc quá trình tối ưu hóa
+        '''
+        Hàm này ghi nhận kết quả của quá trình thực thi, bao gồm số lượng giao dịch, độ bao phủ mã (code coverage), thời gian thực thi, và bộ nhớ tiêu thụ.
+        Sau đó, nó lưu các kết quả này vào một tệp JSON nếu có yêu cầu từ tham số đầu vào (self.env.args.results).
+        '''
         execution_end = time.time()
         execution_delta = execution_end - self.env.execution_begin
 
@@ -822,7 +861,7 @@ class ExecutionTraceAnalyzer(OnTheFlyAnalysis):
         self.logger.debug("Instructions not executed: %s", sorted(diff))
 
 
-def count_hash_4_chromosome(_chromosome: list):
+def count_hash_4_chromosome(_chromosome: list): # Hàm này được sử dụng để tính toán giá trị hash của một cá thể
     value = 0
     for ch in _chromosome:
         value += hash(ch["account"])

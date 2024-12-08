@@ -11,9 +11,17 @@ from eth_abi.exceptions import EncodingTypeError, ValueOutOfBounds, ParseError
 from fuzzer.utils import settings
 from fuzzer.utils.utils import initialize_logger
 
+'''
+Đại diện cho một cá thể trong quá trình fuzzing hoặc sinh mã thử nghiệm. 
+Các hàm trong lớp hỗ trợ việc khởi tạo, sao chép, giải mã và xây dựng 
+các giao dịch thử nghiệm từ nhiễm sắc thể, phục vụ cho việc kiểm thử và 
+phát hiện lỗi trong hợp đồng thông minh hoặc hệ thống mục tiêu.
 
-class Individual():
-    def __init__(self, generator, other_generators=None):
+'''
+
+
+class Individual(): 
+    def __init__(self, generator, other_generators=None): # Khởi tạo một cá thể mới
         self.logger = initialize_logger("Individual")
         self.chromosome = []
         self.solution = []
@@ -21,18 +29,18 @@ class Individual():
         self.other_generators = other_generators if other_generators is not None else []
 
     @property
-    def hash(self):
+    def hash(self): # Trả về mã hash của cá thể
         if not self.solution:
             self.solution = self.decode()
         return str(hash(str([tx for tx in self.solution])))
 
-    def append_other(self):
+    def append_other(self): # Thêm một cá thể khác vào danh sách các cá thể khác
         chosen_generator = random.choice(self.other_generators + [self.generator])
         self.chromosome.extend(chosen_generator.generate_random_individual())
         self.chromosome = random.sample(self.chromosome, len(self.chromosome))
         self.solution = self.decode()
 
-    def init(self, chromosome=None, single=False, func_hash=None, func_args_types=None, default_value=False, no_cross=False):
+    def init(self, chromosome=None, single=False, func_hash=None, func_args_types=None, default_value=False, no_cross=False): # Khởi tạo hoặc tái khởi tạo cá thể
         if not chromosome:
             if settings.TRANS_MODE == "origin" or no_cross:
                 self.chromosome = self.generator.generate_random_individual(func_hash, func_args_types, default_value)
@@ -50,12 +58,12 @@ class Individual():
     def create_cross_individual(self):
         pass
 
-    def clone(self):
+    def clone(self): # Sao chép cá thể
         indv = self.__class__(generator=self.generator, other_generators=self.other_generators)
         indv.init(chromosome=deepcopy(self.chromosome))
         return indv
 
-    def decode(self):
+    def decode(self): # Giải mã nhiễm sắc thể thành các giao dịch thử nghiệm
         solution = []
         for i in range(len(self.chromosome)):
             transaction = {}
@@ -94,7 +102,7 @@ class Individual():
             solution.append(input)
         return solution
 
-    def get_transaction_data_from_chromosome(self, chromosome_index, generator):
+    def get_transaction_data_from_chromosome(self, chromosome_index, generator): # Lấy dữ liệu giao dịch từ nhiễm sắc thể
         data = ""
         arguments = []
         function = None
